@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 
 const appointments = {
   "25-06-2025": [
@@ -40,8 +40,6 @@ const workOptions = [
 ];
 
 const Appointments = () => {
-  const navigate = useNavigate();
-
   console.log(Object.entries(appointments));
 
   return (
