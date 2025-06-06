@@ -1,49 +1,56 @@
+import { useLocation, NavLink } from "react-router";
+import { useTheme } from "../context/ThemeContext";
+
+const tabs = [
+  { name: "🏡 Home", link: "/" },
+  { name: "🗓️ Appointments", link: "/appointments" },
+];
+
+const disabledTabs = [
+  { name: "🧑🏻 Patients", link: "/patients" },
+  { name: "🎨 Labs", link: "/labs" },
+  { name: "📦 Inventory", link: "/inventory" },
+  { name: "💵 Finances", link: "/finances" },
+];
+
 const Sidebar = () => {
-  const tabs = [
-    { name: "Home", link: "/" },
-    { name: "Appointments", link: "/appointments" },
-  ];
-
-  const disabledTabs = [
-    { name: "Patients", link: "/patients" },
-    { name: "Labs", link: "/labs" },
-    { name: "Inventory", link: "/inventory" },
-    { name: "Finances", link: "/finances" },
-  ];
-
+  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   return (
-    <div className="flex h-screen flex-col justify-between border-e border-gray-100 bg-white">
-      <div className="px-4 py-6">
-        <span className="grid h-10 w-[100%] p-8 place-content-center rounded-lg bg-gray-100">
+    <div className="flex min-h-screen h-full flex-col justify-between border-e border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+      <div className="p-4">
+        <span className="grid h-10 w-[100%] p-8 place-content-center rounded-lg bg-gray-200">
           🦷 Ibtisama-Dashboard
         </span>
 
         <ul className="mt-6 space-y-1">
           {tabs.map((tab) => (
             <li key={tab.name}>
-              <a
-                href={tab.link}
-                className={`block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 ${
-                  tab.link === location.pathname
-                    ? "bg-gray-100 text-gray-700"
-                    : "hover:bg-gray-100 hover:text-gray-700"
-                }`}
+              <NavLink
+                to={tab.link}
+                className={({ isActive }) =>
+                  `block rounded-lg p-4 font-medium ${
+                    isActive
+                      ? "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-white"
+                      : "text-gray-500 dark:hover:bg-gray-800 hover:bg-gray-200 hover:text-gray-700 dark:text-white dark:hover:text-white"
+                  }`
+                }
               >
                 {tab.name}
-              </a>
+              </NavLink>
             </li>
           ))}
         </ul>
 
-        <ul className="space-y-1">
+        <ul className="space-y-1 mt-1">
           {disabledTabs.map((tab) => (
             <li key={tab.name}>
               <a
                 href={tab.link}
-                className={`block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed ${
-                  tab.link === location.pathname
-                    ? "bg-gray-100 text-gray-700"
-                    : "hover:bg-gray-100 hover:text-gray-700"
+                className={`block rounded-lg p-4 text-sm font-medium text-gray-500 cursor-not-allowed ${
+                  location.pathname.includes(tab.link)
+                    ? "bg-gray-200 text-gray-700"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:text-white dark:hover:text-white"
                 }`}
               >
                 {tab.name}
@@ -53,25 +60,31 @@ const Sidebar = () => {
         </ul>
       </div>
 
-      <div className="sticky inset-x-0 bottom-0 border-t border-gray-100">
-        <a
-          href="#"
-          className="flex items-center gap-2 bg-white p-4 hover:bg-gray-50"
-        >
+      <div className="sticky inset-x-0 bottom-0 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center p-4 dark:text-white">
+        <a href="" className="flex items-center gap-2 bg-inherit">
           <img
             alt="User Image"
             src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
             className="size-10 rounded-full object-cover"
           />
-
           <div>
             <p className="text-xs">
               <strong className="block font-medium">Dr. John Doe</strong>
-
               <span> john@doe.com </span>
             </p>
           </div>
         </a>
+        <div className="flex gap-2">
+          <button
+            onClick={toggleTheme}
+            className="cursor-pointer bg-gray-200 rounded p-1 hover:bg-gray-300"
+          >
+            {theme === "light" ? "🌑" : "☀"}
+          </button>
+          <button className="cursor-pointer bg-gray-200 rounded p-1 hover:bg-gray-300">
+            🏃🏻‍♂️
+          </button>
+        </div>
       </div>
     </div>
   );
