@@ -9,7 +9,7 @@ It enables clinic staff and doctors to manage appointments, patients, charts, la
 
 ### 🗓️ Appointments Management:
 
-In Progress.
+⬤ In Progress.
 
 - View all appointments with filtering by date, patient, doctor, and status.
 - Create new appointments with the following info:
@@ -23,7 +23,7 @@ In Progress.
 
 ### 🧑🏻 Patient Files:
 
-In Progress.
+⬤ In Progress.
 
 - Contact Information
 - Medical & Treatment History
@@ -35,7 +35,7 @@ In Progress.
 
 ### 🎨 Labwork Management:
 
-Future Release.
+⬤ Future Release.
 
 - Create and manage lab requests.
 - Track status: Requested, In Progress, Completed, Delivered.
@@ -45,7 +45,7 @@ Future Release.
 
 ### 📦 Inventory Management:
 
-Future Release.
+⬤ Future Release.
 
 - Add/edit/remove items.
 - Track stock levels, usage, expiry, and suppliers.
@@ -54,7 +54,7 @@ Future Release.
 
 ### 💰 Financial Overview:
 
-Future Release.
+⬤ Future Release.
 
 - Record payments for appointments, lab work and inventory.
 - Track pending, paid, and overdue bills.
