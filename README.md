@@ -23,7 +23,7 @@ In Progress.
 
 ### 🧑🏻 Patient Files:
 
-Next Release.
+In Progress.
 
 - Contact Information
 - Medical & Treatment History
@@ -37,10 +37,26 @@ Next Release.
 
 Future Release.
 
+- Create and manage lab requests.
+- Track status: Requested, In Progress, Completed, Delivered.
+- Assign to a specific lab and technician.
+- Upload files or impressions (images or scans).
+- Track delivery and pickup dates.
+
 ### 📦 Inventory Management:
 
 Future Release.
 
+- Add/edit/remove items.
+- Track stock levels, usage, expiry, and suppliers.
+- Set thresholds for low stock alerts.
+- Record purchase and restock history.
+
 ### 💰 Financial Overview:
 
 Future Release.
+
+- Record payments for appointments, lab work and inventory.
+- Track pending, paid, and overdue bills.
+- Categorize expenses (rent, salaries, supplies).
+- View income/expense summaries by period.

@@ -35,8 +35,8 @@ const appointments = {
 };
 
 const workOptions = [
-  { name: "Operative", icon: "🍎" },
-  { name: "Endo", icon: "🍌" },
+  { name: "Operative", icon: "✨" },
+  { name: "Endo", icon: "🦷" },
 ];
 
 const Appointments = () => {
