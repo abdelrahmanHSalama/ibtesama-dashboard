@@ -1,26 +1,29 @@
-import { useLocation, NavLink } from "react-router";
+import { NavLink } from "react-router";
 import { useTheme } from "../context/ThemeContext";
 
 const tabs = [
   { name: "🏡 Home", link: "/" },
   { name: "🗓️ Appointments", link: "/appointments" },
+  // { name: "🧑🏻 Patients", link: "/patients" },
+  // { name: "🎨 Labs", link: "/labs" },
+  // { name: "📦 Inventory", link: "/inventory" },
+  // { name: "💵 Finances", link: "/finances" },
 ];
 
 const disabledTabs = [
-  { name: "🧑🏻 Patients", link: "/patients" },
-  { name: "🎨 Labs", link: "/labs" },
-  { name: "📦 Inventory", link: "/inventory" },
-  { name: "💵 Finances", link: "/finances" },
+  { name: "🧑🏻 Patients" },
+  { name: "🎨 Labs" },
+  { name: "📦 Inventory" },
+  { name: "💵 Finances" },
 ];
 
 const Sidebar = () => {
-  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   return (
     <div className="flex min-h-screen h-full flex-col justify-between border-e border-gray-200 dark:border-gray-800 dark:bg-gray-900">
       <div className="p-4">
-        <span className="grid h-10 w-[100%] p-8 place-content-center rounded-lg bg-gray-200">
-          🦷 Ibtisama-Dashboard
+        <span className="flex justify-center items-center w-full p-4 rounded-lg bg-gray-200 dark:bg-gray-800 dark:text-white">
+          Ibtisama-Dashboard
         </span>
 
         <ul className="mt-6 space-y-1">
@@ -45,16 +48,9 @@ const Sidebar = () => {
         <ul className="space-y-1 mt-1">
           {disabledTabs.map((tab) => (
             <li key={tab.name}>
-              <a
-                href={tab.link}
-                className={`block rounded-lg p-4 text-sm font-medium text-gray-500 cursor-not-allowed ${
-                  location.pathname.includes(tab.link)
-                    ? "bg-gray-200 text-gray-700"
-                    : "hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:text-white dark:hover:text-white"
-                }`}
-              >
+              <div className="block rounded-lg p-4 text-sm font-medium text-gray-500 cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:text-white dark:hover:text-white">
                 {tab.name}
-              </a>
+              </div>
             </li>
           ))}
         </ul>
@@ -77,11 +73,11 @@ const Sidebar = () => {
         <div className="flex gap-2">
           <button
             onClick={toggleTheme}
-            className="cursor-pointer bg-gray-200 rounded p-1 hover:bg-gray-300"
+            className="cursor-pointer bg-gray-200 dark:bg-gray-800 hover:dark:bg-gray-700 rounded p-2 hover:bg-gray-300"
           >
             {theme === "light" ? "🌑" : "☀"}
           </button>
-          <button className="cursor-pointer bg-gray-200 rounded p-1 hover:bg-gray-300">
+          <button className="cursor-pointer bg-gray-200 dark:bg-gray-800 hover:dark:bg-gray-700 rounded p-2 hover:bg-gray-300">
             🏃🏻‍♂️
           </button>
         </div>

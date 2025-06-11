@@ -48,95 +48,102 @@ const Appointments = () => {
         <h1 className="text-2xl font-semibold dark:text-white">
           🗓️ Appointments
         </h1>
-        <button className="border-2 border-black font-medium rounded-lg p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200">
-          + Add Appointment
-        </button>
+        <Link
+          to="./new"
+          className="border-2 border-black font-medium rounded-lg p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200"
+        >
+          + New Appointment
+        </Link>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y-2 divide-gray-200">
-          <thead className="ltr:text-left rtl:text-right bg-gray-200 dark:bg-gray-700">
-            <tr className="*:font-medium *:text-gray-900">
-              <th className="px-3 py-2 whitespace-nowrap dark:text-white">
-                Date
-              </th>
-              <th className="dark:text-white">
-                <div className="flex justify-between">
-                  <div className="px-3 py-2 whitespace-nowrap flex-2/8">
-                    Patient
-                  </div>{" "}
-                  <div className="px-3 py-2 whitespace-nowrap flex-2/8">
-                    Doctor
-                  </div>{" "}
-                  <div className="px-3 py-2 whitespace-nowrap flex-1/8">
-                    Start Time
-                  </div>{" "}
-                  <div className="px-3 py-2 whitespace-nowrap flex-1/8">
-                    End Time
-                  </div>{" "}
-                  <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                    Status
-                  </div>
-                  <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                    Work
-                  </div>{" "}
-                </div>
-              </th>
-            </tr>
-          </thead>
 
-          {Object.entries(appointments).map(([date, appts]) => (
-            <tbody
-              key={date}
-              className="divide-y divide-gray-200 dark:bg-gray-700"
-            >
-              {appts.map((appt, index) => (
-                <tr key={appt._id} className="text-gray-900 dark:text-white">
-                  {index === 0 && (
-                    <td
-                      className="px-3 py-2 whitespace-nowrap font-semibold bg-gray-100 dark:bg-gray-800 align-middle"
-                      rowSpan={appts.length}
-                    >
-                      {date}
-                    </td>
-                  )}
-                  <Link
-                    className="flex justify-between hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer"
-                    to={`/appointments/${appt._id}`}
-                  >
-                    <div className="px-3 py-2 whitespace-nowrap flex-2/8">
-                      {appt.patient}
+      {Object.entries(appointments).map(([day, appts]) => {
+        return (
+          <div className="dark:text-white" key={day}>
+            <p className="mb-2">{day}:</p>
+            <table className="min-w-full divide-y-2 divide-gray-200">
+              <thead className="ltr:text-left rtl:text-right bg-gray-200 dark:bg-gray-700">
+                <tr className="*:font-medium *:text-gray-900">
+                  <th className="dark:text-white">
+                    <div className="flex justify-between">
+                      <div className="px-3 py-2 whitespace-nowrap flex-2/8">
+                        Patient
+                      </div>{" "}
+                      <div className="px-3 py-2 whitespace-nowrap flex-2/8">
+                        Doctor
+                      </div>{" "}
+                      <div className="px-3 py-2 whitespace-nowrap flex-1/8">
+                        Start Time
+                      </div>{" "}
+                      <div className="px-3 py-2 whitespace-nowrap flex-1/8">
+                        End Time
+                      </div>{" "}
+                      <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                        Status
+                      </div>
+                      <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                        Work
+                      </div>{" "}
                     </div>
-                    <div className="px-3 py-2 whitespace-nowrap flex-2/8">
-                      {appt.doctor}
-                    </div>
-                    <div className="px-3 py-2 whitespace-nowrap flex-1/8">
-                      {appt.startTime}
-                    </div>
-                    <div className="px-3 py-2 whitespace-nowrap flex-1/8">
-                      {appt.endTime}
-                    </div>
-                    <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                      {appt.status}
-                    </div>
-                    <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                      {appt.workToBeDone.map((work) => {
-                        const match = workOptions.find(
-                          (opt) => opt.name === work
-                        );
-                        return (
-                          <span key={work} className="mr-1">
-                            {match?.icon}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </Link>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          ))}
-        </table>
-      </div>
+              </thead>
+              <tbody
+                // Key for the tbody should be unique per day
+                key={day + "-body"}
+                className="divide-y divide-gray-200 dark:bg-gray-800"
+              >
+                {/* This is the only map needed for appointments within a day */}
+                {appts.map((appt) => (
+                  <tr
+                    key={appt._id}
+                    className="text-gray-900 dark:text-white flex justify-between hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer"
+                  >
+                    <td className="px-3 py-2 whitespace-nowrap flex-2/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.patient}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap flex-2/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.doctor}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap flex-1/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.startTime}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap flex-1/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.endTime}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.status}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.workToBeDone.map((work) => {
+                          const match = workOptions.find(
+                            (opt) => opt.name === work
+                          );
+                          return (
+                            <span key={work} className="mr-1">
+                              {match?.icon}
+                            </span>
+                          );
+                        })}{" "}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
     </div>
   );
 };
