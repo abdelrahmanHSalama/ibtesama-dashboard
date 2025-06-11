@@ -1,3 +1,5 @@
+// Input colour in light mode
+
 import { Link, useParams } from "react-router";
 import { useState } from "react";
 

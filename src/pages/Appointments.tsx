@@ -90,7 +90,7 @@ const Appointments = () => {
               <tbody
                 // Key for the tbody should be unique per day
                 key={day + "-body"}
-                className="divide-y divide-gray-200 dark:bg-gray-800"
+                className="divide-y divide-gray-200 dark:bg-gray-800 bg-gray-50"
               >
                 {/* This is the only map needed for appointments within a day */}
                 {appts.map((appt) => (
