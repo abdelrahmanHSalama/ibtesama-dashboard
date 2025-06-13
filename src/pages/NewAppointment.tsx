@@ -1,43 +1,26 @@
-// TODO: Light Mode
-// TODO: Start and End Time
-
 import { Link } from "react-router";
 import { useState } from "react";
 
-const tableStructure = [
-  { name: "patient", label: "Patient" },
-  { name: "doctor", label: "Doctor" },
-  { name: "date", label: "Date" },
-  { name: "startTime", label: "Start Time" },
-  { name: "endTime", label: "End Time" },
-  { name: "duration", label: "Duration" },
-  { name: "status", label: "Status" },
-  { name: "chiefComplaint", label: "Chief Complaint" },
-  { name: "diagnosis", label: "Diagnosis" },
-  { name: "workToBeDone", label: "To Be Done" },
-  { name: "workDone", label: "Done" },
-  { name: "prescribedMeds", label: "Prescribed Medication" },
-];
-
-const stringFields = ["patient", "doctor"];
-const arrayFields = [
-  "chiefComplaint",
-  "diagnosis",
-  "workToBeDone",
-  "workDone",
-  "prescribedMeds",
-  "notes",
-];
-const timeFields = ["startTime", "endTime"];
-const requiredFields = ["patient", "doctor", "date"];
+import {
+  tableStructure,
+  stringFields,
+  arrayFields,
+  timeFields,
+  requiredFields,
+  inputFieldStyles,
+  timeFieldStyles,
+  buttonStyles,
+  arrayStyles,
+  type AppointmentData,
+} from "../constants/appointmentsConstants";
 
 const newAppointment: AppointmentData = {
-  patient: "",
-  doctor: "",
+  patientName: "",
+  doctorName: "",
   date: "",
   startTime: "",
   endTime: "",
-  status: "",
+  status: "Pending",
   chiefComplaint: [],
   diagnosis: [],
   workToBeDone: [],
@@ -46,26 +29,13 @@ const newAppointment: AppointmentData = {
   notes: [],
 };
 
-interface AppointmentData {
-  patient: string;
-  doctor: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  chiefComplaint: string[];
-  diagnosis: string[];
-  workToBeDone: string[];
-  workDone: string[];
-  prescribedMeds: string[];
-  notes: { _id: string; note: string }[];
-}
-
 const NewAppointment = () => {
   const [appointmentData, setAppointmentData] =
     useState<AppointmentData>(newAppointment);
-  //Explain
   const [tempArray, setTempArray] = useState<Record<string, string>>({});
+  const [editingStates, setEditingStates] = useState<
+    Record<string, Record<number, string>>
+  >({});
 
   const renderFieldCell = (field: (typeof tableStructure)[number]) => {
     const value = appointmentData[field.name as keyof typeof appointmentData];
@@ -74,10 +44,9 @@ const NewAppointment = () => {
       return (
         <div className="flex justify-between items-center w-full">
           <input
-            // Explain
             value={value as string}
             onChange={(e) => handleStringField(field.name, e.target.value)}
-            className="w-full bg-transparent border border-gray-400 dark:border-white rounded-md p-1"
+            className={inputFieldStyles}
             required={requiredFields.includes(field.name)}
           />
         </div>
@@ -94,34 +63,95 @@ const NewAppointment = () => {
                   [field.name]: e.target.value,
                 }))
               }
-              className="w-full bg-transparent border border-gray-400 dark:border-white rounded-md p-1"
+              className={inputFieldStyles}
             ></input>
             <button
+              type="button"
               onClick={() => handleArrayField(field.name)}
-              className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
+              className={buttonStyles}
             >
               +
             </button>
           </div>
           {(value as string[]).map((item, index) => (
-            <div
-              className="dark:bg-gray-700 p-1 text-sm dark:text-white dark:border-white transition duration-200 flex gap-2 items-center justify-between rounded-md"
-              key={index}
-            >
-              <span>{item}</span>
+            <div className={arrayStyles} key={index}>
+              {editingStates[field.name]?.[index] !== undefined ? (
+                <input
+                  value={editingStates[field.name][index]}
+                  onChange={(e) =>
+                    setEditingStates((prev) => ({
+                      ...prev,
+                      [field.name]: {
+                        ...prev[field.name],
+                        [index]: e.target.value,
+                      },
+                    }))
+                  }
+                  className={inputFieldStyles}
+                />
+              ) : (
+                <span>{item}</span>
+              )}
               <div className="flex gap-2">
-                <button
-                  onClick={() => handleDeleteFromTempArray(field.name, index)}
-                  className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => handleDeleteFromTempArray(field.name, index)}
-                  className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
-                >
-                  ×
-                </button>
+                {editingStates[field.name]?.[index] !== undefined ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppointmentData((prev) => {
+                          const updated = [
+                            ...(prev[
+                              field.name as keyof typeof prev
+                            ] as string[]),
+                          ];
+                          updated[index] = editingStates[field.name][index];
+                          return { ...prev, [field.name]: updated };
+                        });
+                        setEditingStates((prev) => {
+                          const { [index]: _, ...rest } = prev[field.name];
+                          return {
+                            ...prev,
+                            [field.name]: rest,
+                          };
+                        });
+                      }}
+                      className={buttonStyles}
+                    >
+                      💾
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingStates((prev) => {
+                          const { [index]: _, ...rest } = prev[field.name];
+                          return {
+                            ...prev,
+                            [field.name]: rest,
+                          };
+                        })
+                      }
+                      className={buttonStyles}
+                    >
+                      ✖️
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingStates((prev) => ({
+                        ...prev,
+                        [field.name]: {
+                          ...prev[field.name],
+                          [index]: item,
+                        },
+                      }))
+                    }
+                    className={buttonStyles}
+                  >
+                    ✏️
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -132,7 +162,7 @@ const NewAppointment = () => {
         <div className="flex justify-between items-center w-full">
           <input
             type="time"
-            className="text-white bg-transparent border border-gray-400 dark:border-white rounded-md p-1"
+            className={timeFieldStyles}
             value={value as string}
             onChange={(e) => handleStringField(field.name, e.target.value)}
           ></input>
@@ -143,8 +173,14 @@ const NewAppointment = () => {
         <div className="flex justify-between items-center w-full">
           <input
             type="date"
-            className="bg-transparent border border-gray-400 dark:border-white rounded-md p-1 uppercase"
-            onChange={(e) => handleStringField(field.name, e.target.value)}
+            className={`${timeFieldStyles} uppercase`}
+            onChange={(e) => {
+              const splitDate = e.target.value.split("-");
+              handleStringField(
+                field.name,
+                `${splitDate[2]}-${splitDate[1]}-${splitDate[0]}`
+              );
+            }}
             required={requiredFields.includes(field.name)}
           ></input>
         </div>
@@ -153,7 +189,7 @@ const NewAppointment = () => {
       return (
         <div className="flex justify-between items-center w-full">
           <select
-            className="w-max bg-transparent border border-gray-400 dark:border-white dark:bg-gray-800 rounded-md p-1"
+            className="w-max bg-transparent border border-black dark:border-white dark:bg-gray-800 rounded-md p-1"
             value={value as string}
             onChange={(e) => handleStringField(field.name, e.target.value)}
           >
@@ -165,7 +201,7 @@ const NewAppointment = () => {
       );
     } else if (field.name === "duration") {
       const { startTime, endTime } = appointmentData;
-      let durationDisplay = "";
+      let durationDisplay = "Please enter start and end time first!";
 
       if (startTime && endTime) {
         const [startHourStr, startMinuteStr] = startTime.split(":");
@@ -196,32 +232,131 @@ const NewAppointment = () => {
 
       return (
         <div className="flex items-center">
-          <p className="flex-1">{durationDisplay}</p>
+          <p className="p-1">{durationDisplay}</p>
         </div>
       );
-    } else if (field.name === "status") {
+    } else if (field.name === "notes") {
       return (
-        <div className="flex justify-between items-center w-full">
-          <select
-            className="w-max bg-transparent border border-gray-400 dark:border-white dark:bg-gray-800 rounded-md p-1"
-            value={value as string}
-            onChange={(e) => handleStringField(field.name, e.target.value)}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Finished">Finished</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-1 items-center gap-2">
+            <input
+              value={tempArray["notes"] || ""}
+              onChange={(e) =>
+                setTempArray((prev) => ({
+                  ...prev,
+                  ["notes"]: e.target.value,
+                }))
+              }
+              className={inputFieldStyles}
+            ></input>
+            <button
+              type="button"
+              onClick={() => handleArrayField("notes")}
+              className={buttonStyles}
+            >
+              +
+            </button>
+          </div>
+          {(appointmentData.notes || []).map((item, index) => {
+            const editingValue = editingStates["notes"]?.[index];
+
+            return (
+              <div className={arrayStyles} key={item._id}>
+                {editingValue !== undefined ? (
+                  <input
+                    value={editingValue}
+                    onChange={(e) =>
+                      setEditingStates((prev) => ({
+                        ...prev,
+                        notes: {
+                          ...prev.notes,
+                          [index]: e.target.value,
+                        },
+                      }))
+                    }
+                    className={inputFieldStyles}
+                  />
+                ) : (
+                  <span>{item.note}</span>
+                )}
+                <div className="flex gap-2">
+                  {editingValue !== undefined ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedNotes = [...appointmentData.notes];
+                          updatedNotes[index] = {
+                            ...updatedNotes[index],
+                            note: editingValue,
+                          };
+                          setAppointmentData((prev) => ({
+                            ...prev,
+                            notes: updatedNotes,
+                          }));
+                          setEditingStates((prev) => {
+                            const { [index]: _, ...rest } = prev.notes || {};
+                            return { ...prev, notes: rest };
+                          });
+                        }}
+                        className={buttonStyles}
+                      >
+                        💾
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingStates((prev) => {
+                            const { [index]: _, ...rest } = prev.notes || {};
+                            return { ...prev, notes: rest };
+                          })
+                        }
+                        className={buttonStyles}
+                      >
+                        ✖️
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingStates((prev) => ({
+                            ...prev,
+                            notes: {
+                              ...prev.notes,
+                              [index]: item.note,
+                            },
+                          }))
+                        }
+                        className={buttonStyles}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteFromTempArray("notes", index)
+                        }
+                        className={buttonStyles}
+                      >
+                        ×
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     }
   };
 
   const handleStringField = (field: string, value: string) => {
-    const valueToAdd = value.trim();
-    if (!valueToAdd) return;
     setAppointmentData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value.trim(),
     }));
   };
 
@@ -263,11 +398,25 @@ const NewAppointment = () => {
   };
 
   const handleSave = () => {
-    const { patient, doctor, date } = appointmentData;
-    if (!patient || !doctor || !date) {
+    const { patientName, doctorName, date } = appointmentData;
+    if (!patientName || !doctorName || !date) {
       alert("Please fill in required fields.");
       return;
     }
+    fetch("http://localhost:9000/api/appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(appointmentData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
     console.log("Appointment:", appointmentData);
     alert("Appointment saved!");
   };
@@ -283,7 +432,7 @@ const NewAppointment = () => {
       <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-semibold">New Appointment</h1>
         <button
-          className="border border-black rounded-md p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200"
+          className="border border-black rounded-md p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer hover:transition-colors hover:duration-200"
           onClick={handleSave}
           type="submit"
         >
@@ -291,77 +440,31 @@ const NewAppointment = () => {
         </button>
       </div>
 
-      <form className="w-full">
+      <form className="w-full" onSubmit={(e) => e.preventDefault()}>
         <table className="w-full">
           <tbody>
-            {tableStructure.map((field) => (
-              <tr key={field.name} className="flex *:p-2 border-b">
-                <td className="flex-1/4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white flex gap-1 items-center">
-                  <span className="font-medium">{field.label}</span>
-                  {requiredFields.includes(field.name) ? (
-                    <span className="text-red-600 text-sm">(Required)</span>
-                  ) : (
-                    ""
-                  )}
-                </td>
-                <td className="flex-3/4 flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 w-full justify-center">
-                  {renderFieldCell(field)}
-                </td>
-              </tr>
-            ))}
-            <tr className="flex *:p-2">
-              <td className="flex-1/4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium flex items-center">
-                Notes
-              </td>
-              <td className="flex-3/4 flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 w-full">
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex flex-1 items-center gap-2">
-                    <input
-                      value={tempArray["notes"] || ""}
-                      onChange={(e) =>
-                        setTempArray((prev) => ({
-                          ...prev,
-                          ["notes"]: e.target.value,
-                        }))
-                      }
-                      className="w-full bg-transparent border border-gray-400 dark:border-white rounded-md p-1"
-                    ></input>
-                    <button
-                      onClick={() => handleArrayField("notes")}
-                      className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
-                    >
-                      +
-                    </button>
-                  </div>
-                  {(appointmentData.notes || []).map((item, index) => (
-                    <div
-                      className="dark:bg-gray-700 text-sm dark:text-white dark:border-white transition duration-200 p-1 flex gap-2 items-center justify-between rounded-md"
-                      key={index}
-                    >
-                      <span>{item.note}</span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() =>
-                            handleDeleteFromTempArray("notes", index)
-                          }
-                          className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteFromTempArray("notes", index)
-                          }
-                          className="border border-black font-medium rounded-md p-1 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200 w-[2rem]"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </td>
-            </tr>
+            {tableStructure.map((field, index) => {
+              const isLast = index === tableStructure.length - 1;
+
+              return (
+                <tr
+                  key={field.name}
+                  className={`flex *:p-2 ${isLast ? "" : "border-b"}`}
+                >
+                  <td className="flex-1/4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white flex gap-1 items-center">
+                    <span className="font-medium">{field.label}</span>
+                    {requiredFields.includes(field.name) ? (
+                      <span className="text-red-600 text-sm">(Required)</span>
+                    ) : (
+                      ""
+                    )}
+                  </td>
+                  <td className="flex-3/4 flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 w-full justify-center">
+                    {renderFieldCell(field)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </form>

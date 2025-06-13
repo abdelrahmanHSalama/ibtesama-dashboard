@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 const appointments = {
@@ -34,13 +35,43 @@ const appointments = {
   ],
 };
 
+interface Appointment {
+  _id: string;
+  patient: string;
+  doctor: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  workToBeDone: string[];
+}
+
+interface AppointmentsByDate {
+  [date: string]: Appointment[];
+}
+
 const workOptions = [
   { name: "Operative", icon: "✨" },
   { name: "Endo", icon: "🦷" },
 ];
 
 const Appointments = () => {
-  console.log(Object.entries(appointments));
+  const [appointmentsData, setAppointmentsData] = useState<AppointmentsByDate>(
+    {}
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("http://localhost:9000/api/appointment");
+      const fetchedData = await res.json();
+      setAppointmentsData(fetchedData.data);
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    console.log(appointmentsData);
+  }, [appointmentsData]);
 
   return (
     <div className="flex flex-col h-full gap-2 p-2">
@@ -50,13 +81,13 @@ const Appointments = () => {
         </h1>
         <Link
           to="./new"
-          className="border-2 border-black font-medium rounded-lg p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer transition duration-200"
+          className="border border-black rounded-md p-2 text-sm hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:border-white dark:hover:text-gray-900 cursor-pointer hover:transition-colors hover:duration-200"
         >
           + New Appointment
         </Link>
       </div>
 
-      {Object.entries(appointments).map(([day, appts]) => {
+      {Object.entries(appointmentsData).map(([day, appts]) => {
         return (
           <div className="dark:text-white" key={day}>
             <p className="mb-2">{day}:</p>
@@ -65,24 +96,24 @@ const Appointments = () => {
                 <tr className="*:font-medium *:text-gray-900">
                   <th className="dark:text-white">
                     <div className="flex justify-between">
-                      <div className="px-3 py-2 whitespace-nowrap flex-2/8">
+                      <div className="px-3 py-2 whitespace-nowrap flex-2/9">
                         Patient
                       </div>{" "}
-                      <div className="px-3 py-2 whitespace-nowrap flex-2/8">
+                      <div className="px-3 py-2 whitespace-nowrap flex-2/9">
                         Doctor
                       </div>{" "}
-                      <div className="px-3 py-2 whitespace-nowrap flex-1/8">
+                      <div className="px-3 py-2 whitespace-nowrap flex-2/9">
+                        Work
+                      </div>
+                      <div className="px-3 py-2 whitespace-nowrap flex-1/9">
                         Start Time
                       </div>{" "}
-                      <div className="px-3 py-2 whitespace-nowrap flex-1/8">
+                      <div className="px-3 py-2 whitespace-nowrap flex-1/9">
                         End Time
                       </div>{" "}
-                      <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                      <div className="px-3 py-2 whitespace-nowrap flex-1/9">
                         Status
                       </div>
-                      <div className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                        Work
-                      </div>{" "}
                     </div>
                   </th>
                 </tr>
@@ -98,43 +129,47 @@ const Appointments = () => {
                     key={appt._id}
                     className="text-gray-900 dark:text-white flex justify-between hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer"
                   >
-                    <td className="px-3 py-2 whitespace-nowrap flex-2/8">
+                    <td className="px-3 py-2 whitespace-nowrap flex-2/9">
                       <Link className="block" to={`/appointments/${appt._id}`}>
                         {appt.patient}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap flex-2/8">
+                    <td className="px-3 py-2 whitespace-nowrap flex-2/9">
                       <Link className="block" to={`/appointments/${appt._id}`}>
                         {appt.doctor}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap flex-1/8">
+                    <td className="px-3 py-2 whitespace-nowrap flex-2/9">
                       <Link className="block" to={`/appointments/${appt._id}`}>
-                        {appt.startTime}
+                        {appt.workToBeDone.length < 1 ? (
+                          <span>-</span>
+                        ) : (
+                          appt.workToBeDone.map((work) => {
+                            const match = workOptions.find(
+                              (opt) => opt.name === work
+                            );
+                            return (
+                              <span key={work} className="mr-1">
+                                {match?.icon}
+                              </span>
+                            );
+                          })
+                        )}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap flex-1/8">
+                    <td className="px-3 py-2 whitespace-nowrap flex-1/9">
                       <Link className="block" to={`/appointments/${appt._id}`}>
-                        {appt.endTime}
+                        {appt.startTime ? appt.startTime : "-"}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
+                    <td className="px-3 py-2 whitespace-nowrap flex-1/9">
+                      <Link className="block" to={`/appointments/${appt._id}`}>
+                        {appt.endTime ? appt.endTime : "-"}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap flex-1/9">
                       <Link className="block" to={`/appointments/${appt._id}`}>
                         {appt.status}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap capitalize flex-1/8">
-                      <Link className="block" to={`/appointments/${appt._id}`}>
-                        {appt.workToBeDone.map((work) => {
-                          const match = workOptions.find(
-                            (opt) => opt.name === work
-                          );
-                          return (
-                            <span key={work} className="mr-1">
-                              {match?.icon}
-                            </span>
-                          );
-                        })}{" "}
                       </Link>
                     </td>
                   </tr>
