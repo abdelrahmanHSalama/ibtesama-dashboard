@@ -4,25 +4,20 @@ export interface AppointmentData {
   date: string;
   startTime: string;
   endTime: string;
-  duration: string;
   status: string;
   chiefComplaint: string[];
   diagnosis: string[];
   workToBeDone: string[];
   workDone: string[];
   prescribedMeds: string[];
-  notes: { _id: string; note: string }[];
+  notes: string[];
 }
 
-export const tableStructure: {
-  name: keyof AppointmentData;
-  label: string;
-}[] = [
+export const tableStructure = [
   { name: "patientName", label: "Patient" },
   { name: "doctorName", label: "Doctor" },
   { name: "date", label: "Date" },
-  { name: "startTime", label: "Start Time" },
-  { name: "endTime", label: "End Time" },
+  { name: "time", label: "Time" },
   { name: "duration", label: "Duration" },
   { name: "status", label: "Status" },
   { name: "chiefComplaint", label: "Chief Complaint" },
@@ -40,9 +35,9 @@ export const arrayFields = [
   "workToBeDone",
   "workDone",
   "prescribedMeds",
-];
-export const timeFields = ["startTime", "endTime"];
-export const requiredFields = ["patientName", "doctorName", "date"];
+  "notes",
+] as const;
+export const requiredFields = ["patientName", "date"];
 
 export const statusOptions = ["Pending", "Finished", "Cancelled"];
 
@@ -51,6 +46,6 @@ export const inputFieldStyles =
 export const timeFieldStyles =
   "bg-transparent border border-black dark:border-white rounded-md p-1";
 export const buttonStyles =
-  "border border-black font-medium rounded-md p-1 text-sm cursor-pointer w-[2rem] dark:text-white dark:border-white hover:transition-colors hover:duration-200 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-gray-900";
+  "border border-black rounded-md p-1 text-sm cursor-pointer dark:text-white dark:border-white hover:transition-colors hover:duration-200 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-gray-900 h-full";
 export const arrayStyles =
-  "bg-gray-200 dark:bg-gray-700 p-1 text-sm dark:text-white dark:border-white flex gap-2 items-center justify-between rounded-md";
+  "bg-gray-200 dark:bg-gray-700 p-1 dark:text-white dark:border-white flex gap-1 items-center justify-between rounded-md";

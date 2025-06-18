@@ -1,0 +1,480 @@
+import { Link } from "react-router";
+import { useCallback, useEffect, useState } from "react";
+import { debounce } from "lodash";
+
+import {
+  tableStructure,
+  stringFields,
+  arrayFields,
+  requiredFields,
+  inputFieldStyles,
+  timeFieldStyles,
+  buttonStyles,
+  arrayStyles,
+  type AppointmentData,
+} from "../constants/appointmentsConstants";
+
+const newAppointment: AppointmentData = {
+  patientName: "",
+  doctorName: "",
+  date: "",
+  startTime: "",
+  endTime: "",
+  status: "Pending",
+  chiefComplaint: [],
+  diagnosis: [],
+  workToBeDone: [],
+  workDone: [],
+  prescribedMeds: [],
+  notes: [],
+};
+
+const NewAppointment = () => {
+  const [appointmentData, setAppointmentData] = useState(newAppointment);
+  const [tempArrayValue, setTempArrayValue] = useState({});
+  const [loadingMsgs, setLoadingMsgs] = useState({});
+  const [successMsgs, setSuccessMsgs] = useState({});
+  const [warningMsgs, setWarningMsgs] = useState({});
+  const [errorMsgs, setErrorMsgs] = useState({});
+
+  useEffect(() => {
+    console.log(appointmentData);
+  }, [appointmentData]);
+
+  const handleStringField = (fieldName: string, value: string) => {
+    setAppointmentData((prev) => ({ ...prev, [fieldName]: value }));
+  };
+
+  const handleArrayField = (fieldName: string, value: string) => {
+    const valueToBeAdded = value.trim();
+    setTempArrayValue((prev) => ({
+      ...prev,
+      [fieldName]: "",
+    }));
+    if (!valueToBeAdded) return;
+    setAppointmentData((prev) => ({
+      ...prev,
+      [fieldName]: [...prev[fieldName], value],
+      // Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'AppointmentData'.
+      // No index signature with a parameter of type 'string' was found on type 'AppointmentData'.ts(7053)
+    }));
+  };
+
+  const handleEditInArray = (
+    fieldName: string,
+    index: number,
+    newValue: string
+  ) => {
+    setAppointmentData((prev) => {
+      const updatedArray = [...prev[fieldName]];
+      updatedArray[index] = newValue;
+
+      return {
+        ...prev,
+        [fieldName]: updatedArray,
+      };
+    });
+  };
+
+  const handleDeleteFromArray = (fieldName: string, index: number) => {
+    setAppointmentData((prev) => {
+      const updatedArray = [...prev[fieldName]].filter((_, i) => i !== index);
+
+      return {
+        ...prev,
+        [fieldName]: updatedArray,
+      };
+    });
+  };
+
+  const handleTempArrayValue = (fieldName: string, value: string) => {
+    setTempArrayValue((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+  };
+
+  const displayDuration = () => {
+    if (!appointmentData.startTime || !appointmentData.endTime) return "-";
+
+    const [startHour, startMinute] = appointmentData.startTime
+      .split(":")
+      .map(Number);
+    let [endHour, endMinute] = appointmentData.endTime.split(":").map(Number);
+
+    if (
+      endHour < startHour ||
+      (endHour === startHour && endMinute < startMinute)
+    ) {
+      endHour += 24;
+    }
+
+    const totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return `${hours > 0 ? `${hours}h ` : ""}${
+      minutes > 0 ? `${minutes}m ` : ""
+    }`;
+  };
+
+  useEffect(() => {
+    if (appointmentData.date && appointmentData.startTime) {
+      if (appointmentData.endTime) {
+        const [startHour, startMinute] = appointmentData.startTime
+          .split(":")
+          .map(Number);
+        let [endHour, endMinute] = appointmentData.endTime
+          .split(":")
+          .map(Number);
+        if (
+          endHour < startHour ||
+          (endHour === startHour && endMinute < startMinute)
+        ) {
+          endHour += 24;
+          setWarningMsgs((prev) => ({
+            ...prev,
+            time: "(!) End time before start time!",
+          }));
+        } else {
+          setWarningMsgs((prev) => ({
+            ...prev,
+            time: null,
+          }));
+        }
+      }
+
+      const payload = {
+        date: appointmentData.date,
+        startTime: appointmentData.startTime,
+        endTime: appointmentData.endTime,
+      };
+
+      setLoadingMsgs((prev) => ({
+        ...prev,
+        time: "Checking Availability...",
+      }));
+      setErrorMsgs((prev) => ({ ...prev, time: null }));
+      setSuccessMsgs((prev) => ({ ...prev, time: null }));
+
+      debouncedCheckConflict(payload);
+    }
+  }, [
+    appointmentData.date,
+    appointmentData.startTime,
+    appointmentData.endTime,
+  ]);
+
+  const debouncedCheckConflict = useCallback(
+    debounce((payload: any) => {
+      fetch("http://localhost:9000/api/appointment/check-conflict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          setLoadingMsgs((prev) => ({ ...prev, time: null }));
+          if (data.conflict) {
+            setErrorMsgs((prev) => ({ ...prev, time: data.error }));
+          } else {
+            setSuccessMsgs((prev) => ({
+              ...prev,
+              time: "Time slot available!",
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+          setLoadingMsgs((prev) => ({ ...prev, time: null }));
+          setErrorMsgs((prev) => ({ ...prev, time: error }));
+        });
+    }, 1000),
+    []
+  );
+
+  const handleTimeField = (fieldName: string, timeString: string) => {
+    if (!timeString) return;
+    if (timeString.length !== 5 || !timeString.includes(":")) return;
+
+    setAppointmentData((prev) => ({
+      ...prev,
+      [fieldName]: timeString,
+    }));
+
+    if (!appointmentData.date) {
+      console.error("Enter date first!");
+      return;
+    }
+
+    const payload =
+      fieldName === "startTime"
+        ? {
+            date: appointmentData.date,
+            startTime: timeString,
+            endTime: null,
+          }
+        : {
+            date: appointmentData.date,
+            startTime: appointmentData.startTime,
+            endTime: timeString,
+          };
+
+    debouncedCheckConflict(payload);
+  };
+
+  const handleSubmit = () => {
+    if (!appointmentData.patientName || !appointmentData.date) {
+      setErrorMsgs((prev) => ({
+        ...prev,
+        submission: "Missing Required Data!",
+      }));
+      return;
+    }
+    setLoadingMsgs((prev) => ({
+      ...prev,
+      submission: "Saving Appointment...",
+    }));
+    fetch("http://localhost:9000/api/appointment/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(appointmentData),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setLoadingMsgs((prev) => ({
+          ...prev,
+          submission: null,
+        }));
+        setErrorMsgs((prev) => ({
+          ...prev,
+          submission: null,
+        }));
+        if (data.success) {
+          setSuccessMsgs((prev) => ({
+            ...prev,
+            submission: "Appointment Saved!",
+          }));
+          setAppointmentData(newAppointment);
+          setTimeout(() => {
+            setSuccessMsgs((prev) => ({
+              ...prev,
+              submission: null,
+            }));
+          }, 2500);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoadingMsgs((prev) => ({
+          ...prev,
+          submission: null,
+        }));
+        setErrorMsgs((prev) => ({
+          ...prev,
+          submission: null,
+        }));
+      });
+  };
+
+  const renderFieldCell = (field: (typeof tableStructure)[number]) => {
+    if (stringFields.includes(field.name)) {
+      return (
+        <div className="flex items-center">
+          <input
+            value={appointmentData[field.name]}
+            className={inputFieldStyles}
+            required={requiredFields.includes(field.name)}
+            onChange={(e) => handleStringField(field.name, e.target.value)}
+          />
+        </div>
+      );
+    } else if (arrayFields.includes(field.name)) {
+      return (
+        <div className="flex flex-col gap-2 justify-center">
+          <div className="flex flex-1 gap-1">
+            <input
+              value={tempArrayValue[field.name] || ""}
+              // Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'AppointmentData'.
+              // No index signature with a parameter of type 'string' was found on type '{}'.ts(7053)
+              className={inputFieldStyles}
+              onChange={(e) => handleTempArrayValue(field.name, e.target.value)}
+            ></input>
+            <button
+              type="button"
+              className={buttonStyles}
+              onClick={() =>
+                handleArrayField(field.name, tempArrayValue[field.name])
+              }
+            >
+              ➕
+            </button>
+          </div>
+          {appointmentData[field.name].length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {appointmentData[field.name].map((element, index) => (
+                // Parameter '_' implicitly has an 'any' type.ts(7006)
+                // Parameter 'index' implicitly has an 'any' type.ts(7006)
+                <li key={index} className={arrayStyles}>
+                  <input
+                    value={element}
+                    className={inputFieldStyles}
+                    onChange={(e) =>
+                      handleEditInArray(field.name, index, e.target.value)
+                    }
+                  ></input>
+                  <button
+                    type="button"
+                    className={buttonStyles}
+                    onClick={() => handleDeleteFromArray(field.name, index)}
+                  >
+                    ❌
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    } else if (field.name === "date") {
+      return (
+        <div className="flex justify-between items-center w-full">
+          <input
+            type="date"
+            className={`${timeFieldStyles} uppercase`}
+            value={appointmentData.date}
+            required={requiredFields.includes(field.name)}
+            onChange={(e) => handleStringField("date", e.target.value)}
+          ></input>
+        </div>
+      );
+    } else if (field.name === "time") {
+      return (
+        <div className="flex items-center gap-2">
+          <span>From</span>
+          <input
+            type="time"
+            value={appointmentData.startTime}
+            className={timeFieldStyles}
+            required={requiredFields.includes(field.name)}
+            disabled={!appointmentData.date}
+            onChange={(e) => handleTimeField("startTime", e.target.value)}
+          ></input>
+          <span>to</span>
+          <input
+            type="time"
+            value={appointmentData.endTime}
+            className={timeFieldStyles}
+            required={requiredFields.includes(field.name)}
+            disabled={!appointmentData.startTime}
+            onChange={(e) => handleTimeField("endTime", e.target.value)}
+          ></input>
+          {!appointmentData.date && (
+            <span className="text-sm">Please add a date first!</span>
+          )}
+          {appointmentData.date && !appointmentData.startTime && (
+            <span>Please add a start time to be able to add an end time!</span>
+          )}
+          {loadingMsgs.time && (
+            <span className="text-sm dark:text-white">{loadingMsgs.time}</span>
+          )}
+          {successMsgs.time && (
+            <span className="text-sm text-green-500">{successMsgs.time}</span>
+          )}
+
+          {errorMsgs.time && (
+            <span className="text-sm text-red-500">{errorMsgs.time}</span>
+          )}
+          {warningMsgs.time && (
+            <span className="text-sm dark:text-white">{warningMsgs.time}</span>
+          )}
+          {/* Property 'time' does not exist on type '{}'.ts(2339) */}
+        </div>
+      );
+    } else if (field.name === "status") {
+      return (
+        <div className="flex justify-between items-center w-full">
+          <select
+            className="w-max bg-transparent border border-black dark:border-white dark:bg-gray-800 rounded-md p-1"
+            value={appointmentData[field.name]}
+            onChange={(e) => handleStringField("status", e.target.value)}
+          >
+            <option value="Pending">Pending</option>
+            <option value="Finished">Finished</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      );
+    } else if (field.name === "duration") {
+      return (
+        <div className="flex items-center">
+          <p className="py-1">{displayDuration()}</p>
+        </div>
+      );
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full gap-2 p-1 items-start dark:text-white space-y-1">
+      <Link
+        className="hover:underline underline-offset-2 text-sm cursor-pointer flex items-end"
+        to="/appointments"
+      >
+        ◀ Return to Appointments
+      </Link>
+      <div className="flex w-full items-center justify-between">
+        <h1 className="text-2xl font-semibold">New Appointment</h1>
+        <div className="flex gap-1">
+          <span>
+            {loadingMsgs.submission && (
+              <span className="text-sm dark:text-white">
+                {loadingMsgs.submission}
+              </span>
+            )}
+            {successMsgs.submission && (
+              <span className="text-sm text-green-500">
+                {successMsgs.submission}
+              </span>
+            )}
+            {errorMsgs.submission && (
+              <span className="text-sm text-red-500">
+                {errorMsgs.submission}
+              </span>
+            )}
+          </span>
+          <button className={buttonStyles} type="submit" onClick={handleSubmit}>
+            Save Appointment
+          </button>
+        </div>
+      </div>
+      <form className="w-full" onSubmit={(e) => e.preventDefault()}>
+        {tableStructure.map((field, index) => {
+          const isLast = index === tableStructure.length - 1;
+
+          return (
+            <div
+              key={field.name}
+              className={`flex *:p-2 ${isLast ? "" : "border-b"}`}
+            >
+              <div className="flex-1/4 flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white">
+                <span className="font-medium">{field.label}</span>
+                {requiredFields.includes(field.name) ? (
+                  <span className="text-red-600 text-sm">(Required)</span>
+                ) : (
+                  ""
+                )}
+              </div>
+              <div className="flex-3/4 flex flex-col justify-center gap-2 bg-gray-100 dark:bg-gray-800">
+                {renderFieldCell(field)}
+              </div>
+            </div>
+          );
+        })}
+      </form>
+    </div>
+  );
+};
+
+export default NewAppointment;
