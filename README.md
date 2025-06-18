@@ -31,7 +31,7 @@ It enables clinic staff and doctors to manage appointments, patients, charts, la
 - Treatment Plans & Prescribed Medications.
 - Appointment History.
 - Dental Charts.
-- X-Rays, and a basic diagnosis using AI.
+- X-Rays.
 
 ### 🎨 Labwork Management:
 
