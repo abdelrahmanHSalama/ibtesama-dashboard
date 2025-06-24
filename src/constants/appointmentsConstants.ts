@@ -1,7 +1,8 @@
 export interface AppointmentData {
+  id?: string;
   patientName: string;
   doctorName: string;
-  date: string;
+  date?: string;
   startTime: string;
   endTime: string;
   status: string;
@@ -13,7 +14,24 @@ export interface AppointmentData {
   notes: string[];
 }
 
-export const tableStructure = [
+export type AppointmentsByDate = {
+  [date: string]: AppointmentData[];
+};
+
+export type TableField = keyof AppointmentData | "time" | "duration";
+
+export type AppointmentStatus =
+  | "Pending"
+  | "Completed"
+  | "Cancelled"
+  | "No Show";
+
+export interface Messages {
+  time: string | null;
+  submission: string | null;
+}
+
+export const tableStructure: { name: TableField; label: string }[] = [
   { name: "patientName", label: "Patient" },
   { name: "doctorName", label: "Doctor" },
   { name: "date", label: "Date" },
@@ -28,15 +46,19 @@ export const tableStructure = [
   { name: "notes", label: "Notes" },
 ];
 
-export const stringFields = ["patientName", "doctorName"];
-export const arrayFields = [
+export const stringFields: (keyof AppointmentData)[] = [
+  "patientName",
+  "doctorName",
+];
+export const arrayFields: (keyof AppointmentData)[] = [
   "chiefComplaint",
   "diagnosis",
   "workToBeDone",
   "workDone",
   "prescribedMeds",
   "notes",
-] as const;
+];
+
 export const requiredFields = ["patientName", "date"];
 
 export const statusOptions = ["Pending", "Finished", "Cancelled"];

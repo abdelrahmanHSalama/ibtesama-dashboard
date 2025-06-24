@@ -12,6 +12,7 @@ import {
   buttonStyles,
   arrayStyles,
   type AppointmentData,
+  type Messages,
 } from "../constants/appointmentsConstants";
 
 const newAppointment: AppointmentData = {
@@ -32,20 +33,38 @@ const newAppointment: AppointmentData = {
 const NewAppointment = () => {
   const [appointmentData, setAppointmentData] = useState(newAppointment);
   const [tempArrayValue, setTempArrayValue] = useState({});
-  const [loadingMsgs, setLoadingMsgs] = useState({});
-  const [successMsgs, setSuccessMsgs] = useState({});
-  const [warningMsgs, setWarningMsgs] = useState({});
-  const [errorMsgs, setErrorMsgs] = useState({});
+  const [loadingMsgs, setLoadingMsgs] = useState<Messages>({
+    time: null,
+    submission: null,
+  });
+  const [successMsgs, setSuccessMsgs] = useState<Messages>({
+    time: null,
+    submission: null,
+  });
+  const [warningMsgs, setWarningMsgs] = useState<Messages>({
+    time: null,
+    submission: null,
+  });
+  const [errorMsgs, setErrorMsgs] = useState<Messages>({
+    time: null,
+    submission: null,
+  });
 
   useEffect(() => {
     console.log(appointmentData);
   }, [appointmentData]);
 
-  const handleStringField = (fieldName: string, value: string) => {
+  const handleStringField = (
+    fieldName: keyof AppointmentData,
+    value: string
+  ) => {
     setAppointmentData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
-  const handleArrayField = (fieldName: string, value: string) => {
+  const handleArrayField = (
+    fieldName: keyof AppointmentData,
+    value: string
+  ) => {
     const valueToBeAdded = value.trim();
     setTempArrayValue((prev) => ({
       ...prev,
@@ -61,7 +80,7 @@ const NewAppointment = () => {
   };
 
   const handleEditInArray = (
-    fieldName: string,
+    fieldName: keyof AppointmentData,
     index: number,
     newValue: string
   ) => {
@@ -76,7 +95,10 @@ const NewAppointment = () => {
     });
   };
 
-  const handleDeleteFromArray = (fieldName: string, index: number) => {
+  const handleDeleteFromArray = (
+    fieldName: keyof AppointmentData,
+    index: number
+  ) => {
     setAppointmentData((prev) => {
       const updatedArray = [...prev[fieldName]].filter((_, i) => i !== index);
 
@@ -279,7 +301,10 @@ const NewAppointment = () => {
       });
   };
 
-  const renderFieldCell = (field: (typeof tableStructure)[number]) => {
+  const renderFieldCell = (field: {
+    name: keyof AppointmentData;
+    label: string;
+  }) => {
     if (stringFields.includes(field.name)) {
       return (
         <div className="flex items-center">
@@ -309,7 +334,7 @@ const NewAppointment = () => {
                 handleArrayField(field.name, tempArrayValue[field.name])
               }
             >
-              ➕
+              +
             </button>
           </div>
           {appointmentData[field.name].length > 0 && (
@@ -351,6 +376,7 @@ const NewAppointment = () => {
         </div>
       );
     } else if (field.name === "time") {
+      // This comparison appears to be unintentional because the types '"patientName" | "doctorName" | "startTime" | "endTime" | "status" | "chiefComplaint" | "diagnosis" | "workToBeDone" | "workDone" | "prescribedMeds" | "notes"' and '"time"' have no overlap.ts(2367)
       return (
         <div className="flex items-center gap-2">
           <span>From</span>
@@ -444,7 +470,11 @@ const NewAppointment = () => {
               </span>
             )}
           </span>
-          <button className={buttonStyles} type="submit" onClick={handleSubmit}>
+          <button
+            className={`${buttonStyles} p-2`}
+            type="submit"
+            onClick={handleSubmit}
+          >
             Save Appointment
           </button>
         </div>
@@ -467,7 +497,9 @@ const NewAppointment = () => {
                 )}
               </div>
               <div className="flex-3/4 flex flex-col justify-center gap-2 bg-gray-100 dark:bg-gray-800">
-                {renderFieldCell(field)}
+                {renderFieldCell(field as keyof AppointmentData)}
+                {/* Argument of type 'string' is not assignable to parameter of type '{ name: keyof AppointmentData; label: string; }'.
+  Type 'string' is not assignable to type '{ name: keyof AppointmentData; label: string; }'.ts(2345) */}
               </div>
             </div>
           );
