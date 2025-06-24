@@ -3,6 +3,8 @@ import {
   buttonStyles,
   type AppointmentsByDate,
 } from "../constants/appointmentsConstants";
+import { useEffect, useState } from "react";
+import Spinner from "../components/Spinner";
 
 export const mockAppointments: AppointmentsByDate = {
   "2024-05-21": [
@@ -99,6 +101,25 @@ const calculateDuration = (start: string, end: string) => {
 };
 
 const AllAppointments = () => {
+  const [appointmentsData, setAppointmentsData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:9000/api/appointment/", {
+      method: "GET",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setAppointmentsData(data.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        setError(error);
+      });
+  }, []);
+
   return (
     <div className="flex flex-col h-full gap-2 p-1 items-start dark:text-white space-y-1">
       <div className="flex w-full items-center justify-between">
@@ -107,41 +128,52 @@ const AllAppointments = () => {
           + New Appointment
         </Link>
       </div>
-      <div className="flex flex-col w-full space-y-4">
-        {Object.entries(mockAppointments).map(([date, appointments]) => (
-          <div key={date}>
-            <h2 className="font-semibold mb-2">
-              {date.split("-").reverse().join("-")}:
-            </h2>
-            <div className="flex justify-between dark:bg-gray-700 p-2">
-              <p className="flex-1/6">Patient</p>
-              <p className="flex-1/6">Doctor</p>
-              <p className="flex-1/6">Time</p>
-              <p className="flex-1/6">Status</p>
-              <p className="flex-2/6">Work to Be Done</p>
-            </div>
-            {appointments.map((appt) => (
-              <Link
-                to={`./${appt.id}`}
-                className="flex justify-between dark:bg-gray-800 p-2 hover:dark:bg-gray-700"
-              >
-                <p className="flex-1/6">{appt.patientName}</p>
-                <p className="flex-1/6">{appt.doctorName}</p>
-                <p className="flex-1/6">
-                  {appt.startTime} - {appt.endTime}{" "}
-                  {calculateDuration(appt.startTime, appt.endTime)}
-                </p>
-                <p className="flex-1/6">{appt.status}</p>
-                <p
-                  className="flex-2/6 truncate"
-                  title={appt.workToBeDone.join(" + ")}
-                >
-                  {appt.workToBeDone.join(" + ")}
-                </p>
-              </Link>
-            ))}
+      <div className="flex flex-col flex-grow w-full space-y-4">
+        {loading ? (
+          <div className="w-full h-full flex justify-center items-center">
+            <Spinner />
           </div>
-        ))}
+        ) : error ? (
+          <div className="w-full h-full flex justify-center items-center">
+            <p>⚠ Error Loading Appointments!</p>
+          </div>
+        ) : (
+          Object.entries(appointmentsData).map(([date, appointments]) => (
+            <div key={date}>
+              <h2 className="font-semibold mb-2">
+                {date.split("-").reverse().join("-")}:
+              </h2>
+              <div className="flex justify-between dark:bg-gray-700 p-2">
+                <p className="flex-1/6">Patient</p>
+                <p className="flex-1/6">Doctor</p>
+                <p className="flex-1/6">Time</p>
+                <p className="flex-1/6">Status</p>
+                <p className="flex-2/6">Work to Be Done</p>
+              </div>
+              {appointments.map((appt) => (
+                <Link
+                  to={`./${appt._id}`}
+                  key={appt.id}
+                  className="flex justify-between dark:bg-gray-800 p-2 hover:dark:bg-gray-700"
+                >
+                  <p className="flex-1/6">{appt.patient || "-"}</p>
+                  <p className="flex-1/6">{appt.doctor || "-"}</p>
+                  <p className="flex-1/6">
+                    {appt.startTime} - {appt.endTime}{" "}
+                    {calculateDuration(appt.startTime, appt.endTime)}
+                  </p>
+                  <p className="flex-1/6">{appt.status}</p>
+                  <p
+                    className="flex-2/6 truncate"
+                    title={appt.workToBeDone.join(" + ")}
+                  >
+                    {appt.workToBeDone.join(" + ") || "-"}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

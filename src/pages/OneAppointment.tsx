@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useCallback, useEffect, useState } from "react";
 import { debounce } from "lodash";
 
@@ -15,23 +15,28 @@ import {
   type Messages,
 } from "../constants/appointmentsConstants";
 
-const newAppointment: AppointmentData = {
-  patientName: "",
-  doctorName: "",
-  date: "",
-  startTime: "",
-  endTime: "",
-  status: "Pending",
-  chiefComplaint: [],
-  diagnosis: [],
-  workToBeDone: [],
-  workDone: [],
-  prescribedMeds: [],
+const appointment: AppointmentData = {
+  id: "1",
+  patientName: "John Doe",
+  doctorName: "Dr. Evelyn Reed",
+  startTime: "09:00",
+  endTime: "09:45",
+  status: "Finished",
+  chiefComplaint: ["Severe toothache in upper right molar."],
+  diagnosis: ["Deep cavity (caries) in tooth #3."],
+  workToBeDone: ["Composite filling."],
+  workDone: [
+    "Administered local anesthesia.",
+    "Excavated decay from tooth #3.",
+    "Placed and cured composite filling.",
+  ],
+  prescribedMeds: ["Ibuprofen 600mg as needed for pain."],
   notes: [],
 };
 
-const NewAppointment = () => {
-  const [appointmentData, setAppointmentData] = useState(newAppointment);
+const OneAppointment = () => {
+  const [appointmentData, setAppointmentData] = useState(appointment);
+  const [isEditing, setIsEditing] = useState(false);
   const [tempArrayValue, setTempArrayValue] = useState({});
   const [loadingMsgs, setLoadingMsgs] = useState<Messages>({
     time: null,
@@ -49,6 +54,29 @@ const NewAppointment = () => {
     time: null,
     submission: null,
   });
+  const navigate = useNavigate();
+
+  const handleDeleteAppt = (id: string) => {
+    fetch(`http://localhost:9000/api/appointment/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setSuccessMsgs((prev) => ({
+          ...prev,
+          submission: "Appointment deleted! Redirecting...",
+        }));
+        setTimeout(() => {
+          navigate("/appointments");
+        }, 1000);
+      })
+      .catch((error) => {
+        setErrorMsgs((prev) => ({
+          ...prev,
+          submission: "Delete failed!",
+        }));
+      });
+  };
 
   const handleStringField = (
     fieldName: keyof AppointmentData,
@@ -297,76 +325,103 @@ const NewAppointment = () => {
     if (stringFields.includes(field.name)) {
       return (
         <div className="flex items-center">
-          <input
-            value={appointmentData[field.name]}
-            className={inputFieldStyles}
-            required={requiredFields.includes(field.name)}
-            onChange={(e) => handleStringField(field.name, e.target.value)}
-          />
+          {isEditing ? (
+            <input
+              value={appointmentData[field.name]}
+              className={inputFieldStyles}
+              required={requiredFields.includes(field.name)}
+              onChange={(e) => handleStringField(field.name, e.target.value)}
+            />
+          ) : (
+            <p>{appointmentData[field.name]}</p>
+          )}
         </div>
       );
     } else if (arrayFields.includes(field.name)) {
       return (
         <div className="flex flex-col gap-2 justify-center">
-          <div className="flex flex-1 gap-1">
-            <input
-              value={tempArrayValue[field.name] || ""}
-              // Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'AppointmentData'.
-              // No index signature with a parameter of type 'string' was found on type '{}'.ts(7053)
-              className={inputFieldStyles}
-              onChange={(e) => handleTempArrayValue(field.name, e.target.value)}
-            ></input>
-            <button
-              type="button"
-              className={buttonStyles}
-              onClick={() =>
-                handleArrayField(field.name, tempArrayValue[field.name])
-              }
-            >
-              +
-            </button>
-          </div>
-          {appointmentData[field.name].length > 0 && (
-            <ul className="flex flex-col gap-2">
-              {appointmentData[field.name].map((element, index) => (
-                // Parameter '_' implicitly has an 'any' type.ts(7006)
-                // Parameter 'index' implicitly has an 'any' type.ts(7006)
-                <li key={index} className={arrayStyles}>
-                  <input
-                    value={element}
-                    className={inputFieldStyles}
-                    onChange={(e) =>
-                      handleEditInArray(field.name, index, e.target.value)
-                    }
-                  ></input>
-                  <button
-                    type="button"
-                    className={buttonStyles}
-                    onClick={() => handleDeleteFromArray(field.name, index)}
-                  >
-                    ❌
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {isEditing ? (
+            <>
+              <div className="flex flex-1 gap-1">
+                <input
+                  value={tempArrayValue[field.name] || ""}
+                  className={inputFieldStyles}
+                  onChange={(e) =>
+                    handleTempArrayValue(field.name, e.target.value)
+                  }
+                ></input>
+                <button
+                  type="button"
+                  className={buttonStyles}
+                  onClick={() =>
+                    handleArrayField(field.name, tempArrayValue[field.name])
+                  }
+                >
+                  ➕
+                </button>
+              </div>
+              {appointmentData[field.name].length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {appointmentData[field.name].map((element, index) => (
+                    // Parameter '_' implicitly has an 'any' type.ts(7006)
+                    // Parameter 'index' implicitly has an 'any' type.ts(7006)
+                    <li key={index} className={arrayStyles}>
+                      <input
+                        value={element}
+                        className={inputFieldStyles}
+                        onChange={(e) =>
+                          handleEditInArray(field.name, index, e.target.value)
+                        }
+                      ></input>
+                      <button
+                        type="button"
+                        className={buttonStyles}
+                        onClick={() => handleDeleteFromArray(field.name, index)}
+                      >
+                        ❌
+                      </button>
+                    </li>
+                  )) || "-"}
+                </ul>
+              )}
+            </>
+          ) : (
+            <>
+              {appointmentData[field.name].length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {appointmentData[field.name].map((element, index) => (
+                    // Parameter '_' implicitly has an 'any' type.ts(7006)
+                    // Parameter 'index' implicitly has an 'any' type.ts(7006)
+                    <li key={index} className={arrayStyles}>
+                      {element}
+                    </li>
+                  )) || "-"}
+                </ul>
+              ) : (
+                <p>-</p>
+              )}
+            </>
           )}
         </div>
       );
     } else if (field.name === "date") {
       return (
         <div className="flex justify-between items-center w-full">
-          <input
-            type="date"
-            className={`${timeFieldStyles} uppercase`}
-            value={appointmentData.date}
-            required={requiredFields.includes(field.name)}
-            onChange={(e) => handleStringField("date", e.target.value)}
-          ></input>
+          {isEditing ? (
+            <input
+              type="date"
+              className={`${timeFieldStyles} uppercase`}
+              value={appointmentData.date}
+              required={requiredFields.includes(field.name)}
+              onChange={(e) => handleStringField("date", e.target.value)}
+            ></input>
+          ) : (
+            <p>{appointmentData.date || "-"}</p>
+          )}
         </div>
       );
     } else if (field.name === "time") {
-      // This comparison appears to be unintentional because the types '"patientName" | "doctorName" | "startTime" | "endTime" | "status" | "chiefComplaint" | "diagnosis" | "workToBeDone" | "workDone" | "prescribedMeds" | "notes"' and '"time"' have no overlap.ts(2367)
-      return (
+      return isEditing ? (
         <div className="flex items-center gap-2">
           <span>From</span>
           <input
@@ -400,28 +455,34 @@ const NewAppointment = () => {
           {successMsgs.time && (
             <span className="text-sm text-green-500">{successMsgs.time}</span>
           )}
-
           {errorMsgs.time && (
             <span className="text-sm text-red-500">{errorMsgs.time}</span>
           )}
           {warningMsgs.time && (
             <span className="text-sm dark:text-white">{warningMsgs.time}</span>
           )}
-          {/* Property 'time' does not exist on type '{}'.ts(2339) */}
         </div>
+      ) : (
+        <p>
+          {appointmentData.startTime || "-"} - {appointmentData.endTime || "-"}
+        </p>
       );
     } else if (field.name === "status") {
       return (
         <div className="flex justify-between items-center w-full">
-          <select
-            className="w-max bg-transparent border border-black dark:border-white dark:bg-gray-800 rounded-md p-1"
-            value={appointmentData[field.name]}
-            onChange={(e) => handleStringField("status", e.target.value)}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Finished">Finished</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+          {isEditing ? (
+            <select
+              className="w-max bg-transparent border border-black dark:border-white dark:bg-gray-800 rounded-md p-1"
+              value={appointmentData[field.name]}
+              onChange={(e) => handleStringField("status", e.target.value)}
+            >
+              <option value="Pending">Pending</option>
+              <option value="Finished">Finished</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          ) : (
+            <p>{appointmentData.status}</p>
+          )}
         </div>
       );
     } else if (field.name === "duration") {
@@ -448,7 +509,7 @@ const NewAppointment = () => {
         ◀ Return to Appointments
       </Link>
       <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-semibold">New Appointment</h1>
+        <h1 className="text-2xl font-semibold">Appointment Details</h1>
         <div className="flex gap-1">
           <span>
             {loadingMsgs.submission && (
@@ -468,43 +529,93 @@ const NewAppointment = () => {
             )}
           </span>
           <button
-            className={`${buttonStyles} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-            disabled={isSaveDisabled}
-            type="submit"
-            onClick={handleSubmit}
+            className={`${buttonStyles} p-2`}
+            type="button"
+            onClick={() => {
+              handleDeleteAppt(appointment.id);
+            }}
           >
-            Save Appointment
+            Delete Appointment
           </button>
+          {isEditing ? (
+            <button
+              className={`${buttonStyles} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              disabled={isSaveDisabled}
+              type="submit"
+              onClick={handleSubmit}
+            >
+              Update Appointment
+            </button>
+          ) : (
+            <button
+              className={`${buttonStyles} p-2`}
+              type="button"
+              onClick={() => {
+                setIsEditing((prev) => !prev);
+              }}
+            >
+              Edit Appointment
+            </button>
+          )}
         </div>
       </div>
-      <form className="w-full" onSubmit={(e) => e.preventDefault()}>
-        {tableStructure.map((field, index) => {
-          const isLast = index === tableStructure.length - 1;
+      {isEditing ? (
+        <form className="w-full" onSubmit={(e) => e.preventDefault()}>
+          {tableStructure.map((field, index) => {
+            const isLast = index === tableStructure.length - 1;
 
-          return (
-            <div
-              key={field.name}
-              className={`flex *:p-2 ${isLast ? "" : "border-b"}`}
-            >
-              <div className="flex-1/4 flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white">
-                <span className="font-medium">{field.label}</span>
-                {requiredFields.includes(field.name) ? (
-                  <span className="text-red-600 text-sm">(Required)</span>
-                ) : (
-                  ""
-                )}
-              </div>
-              <div className="flex-3/4 flex flex-col justify-center gap-2 bg-gray-100 dark:bg-gray-800">
-                {renderFieldCell(field as keyof AppointmentData)}
-                {/* Argument of type 'string' is not assignable to parameter of type '{ name: keyof AppointmentData; label: string; }'.
+            return (
+              <div
+                key={field.name}
+                className={`flex *:p-2 ${isLast ? "" : "border-b"}`}
+              >
+                <div className="flex-1/4 flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <span className="font-medium">{field.label}</span>
+                  {requiredFields.includes(field.name) ? (
+                    <span className="text-red-600 text-sm">(Required)</span>
+                  ) : (
+                    ""
+                  )}
+                </div>
+                <div className="flex-3/4 flex flex-col justify-center gap-2 bg-gray-100 dark:bg-gray-800">
+                  {renderFieldCell(field as keyof AppointmentData)}
+                  {/* Argument of type 'string' is not assignable to parameter of type '{ name: keyof AppointmentData; label: string; }'.
   Type 'string' is not assignable to type '{ name: keyof AppointmentData; label: string; }'.ts(2345) */}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </form>
+            );
+          })}
+        </form>
+      ) : (
+        <div className="w-full">
+          {tableStructure.map((field, index) => {
+            const isLast = index === tableStructure.length - 1;
+
+            return (
+              <div
+                key={field.name}
+                className={`flex *:p-2 ${isLast ? "" : "border-b"}`}
+              >
+                <div className="flex-1/4 flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <span className="font-medium">{field.label}</span>
+                  {requiredFields.includes(field.name) ? (
+                    <span className="text-red-600 text-sm">(Required)</span>
+                  ) : (
+                    ""
+                  )}
+                </div>
+                <div className="flex-3/4 flex flex-col justify-center gap-2 bg-gray-100 dark:bg-gray-800">
+                  {renderFieldCell(field as keyof AppointmentData)}
+                  {/* Argument of type 'string' is not assignable to parameter of type '{ name: keyof AppointmentData; label: string; }'.
+  Type 'string' is not assignable to type '{ name: keyof AppointmentData; label: string; }'.ts(2345) */}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
 
-export default NewAppointment;
+export default OneAppointment;

@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router";
 import Home from "./pages/Home";
 import NewAppointment from "./pages/NewAppointment";
 import AllAppointments from "./pages/AllAppointments";
-// import AppointmentDetails from "./pages/AppointmentDetails";
+import OneAppointment from "./pages/OneAppointment";
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/appointments" element={<AllAppointments />} />
-          {/* <Route path="/appointments/:id" element={<AppointmentDetails />} /> */}
+          <Route path="/appointments/:id" element={<OneAppointment />} />
           <Route path="/appointments/new" element={<NewAppointment />} />
         </Routes>
       </div>
