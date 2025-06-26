@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { debounce } from "lodash";
 
 import {
-  tableStructure,
   stringFields,
   arrayFields,
   requiredFields,
@@ -11,9 +10,21 @@ import {
   timeFieldStyles,
   buttonStyles,
   arrayStyles,
+  type TableField,
   type AppointmentData,
   type Messages,
 } from "../constants/appointmentsConstants";
+
+export const tableStructure: { name: TableField; label: string }[] = [
+  { name: "patientName", label: "Patient" },
+  { name: "doctorName", label: "Doctor" },
+  { name: "date", label: "Date" },
+  { name: "time", label: "Time" },
+  { name: "status", label: "Status" },
+  { name: "chiefComplaint", label: "Chief Complaint" },
+  { name: "workToBeDone", label: "To Be Done" },
+  { name: "notes", label: "Notes" },
+];
 
 const newAppointment: AppointmentData = {
   patientName: "",
@@ -115,30 +126,6 @@ const NewAppointment = () => {
     }));
   };
 
-  const displayDuration = () => {
-    if (!appointmentData.startTime || !appointmentData.endTime) return "-";
-
-    const [startHour, startMinute] = appointmentData.startTime
-      .split(":")
-      .map(Number);
-    let [endHour, endMinute] = appointmentData.endTime.split(":").map(Number);
-
-    if (
-      endHour < startHour ||
-      (endHour === startHour && endMinute < startMinute)
-    ) {
-      endHour += 24;
-    }
-
-    const totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    return `${hours > 0 ? `${hours}h ` : ""}${
-      minutes > 0 ? `${minutes}m ` : ""
-    }`;
-  };
-
   useEffect(() => {
     if (appointmentData.date && appointmentData.startTime) {
       if (appointmentData.endTime) {
@@ -195,6 +182,7 @@ const NewAppointment = () => {
       })
         .then((res) => res.json())
         .then((data) => {
+          console.log(data);
           setLoadingMsgs((prev) => ({ ...prev, time: null }));
           if (data.conflict) {
             setErrorMsgs((prev) => ({ ...prev, time: data.error }));
@@ -270,10 +258,15 @@ const NewAppointment = () => {
             submission: "Appointment Saved!",
           }));
           setAppointmentData(newAppointment);
+          setSuccessMsgs((prev) => ({
+            ...prev,
+            time: null,
+          }));
           setTimeout(() => {
             setSuccessMsgs((prev) => ({
               ...prev,
               submission: null,
+              time: null,
             }));
           }, 2500);
         }
@@ -323,7 +316,7 @@ const NewAppointment = () => {
                 handleArrayField(field.name, tempArrayValue[field.name])
               }
             >
-              +
+              ➕
             </button>
           </div>
           {appointmentData[field.name].length > 0 && (
@@ -424,12 +417,6 @@ const NewAppointment = () => {
           </select>
         </div>
       );
-    } else if (field.name === "duration") {
-      return (
-        <div className="flex items-center">
-          <p className="py-1">{displayDuration()}</p>
-        </div>
-      );
     }
   };
 
@@ -449,7 +436,7 @@ const NewAppointment = () => {
       </Link>
       <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-semibold">New Appointment</h1>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
           <span>
             {loadingMsgs.submission && (
               <span className="text-sm dark:text-white">

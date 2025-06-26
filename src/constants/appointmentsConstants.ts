@@ -36,7 +36,6 @@ export const tableStructure: { name: TableField; label: string }[] = [
   { name: "doctorName", label: "Doctor" },
   { name: "date", label: "Date" },
   { name: "time", label: "Time" },
-  { name: "duration", label: "Duration" },
   { name: "status", label: "Status" },
   { name: "chiefComplaint", label: "Chief Complaint" },
   { name: "diagnosis", label: "Diagnosis" },

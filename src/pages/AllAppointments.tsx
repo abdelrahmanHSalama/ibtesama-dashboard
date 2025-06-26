@@ -111,6 +111,7 @@ const AllAppointments = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        console.log(data);
         setAppointmentsData(data.data);
         setLoading(false);
       })
@@ -137,7 +138,7 @@ const AllAppointments = () => {
           <div className="w-full h-full flex justify-center items-center">
             <p>⚠ Error Loading Appointments!</p>
           </div>
-        ) : (
+        ) : Object.keys(appointmentsData).length > 0 ? (
           Object.entries(appointmentsData).map(([date, appointments]) => (
             <div key={date}>
               <h2 className="font-semibold mb-2">
@@ -153,7 +154,7 @@ const AllAppointments = () => {
               {appointments.map((appt) => (
                 <Link
                   to={`./${appt._id}`}
-                  key={appt.id}
+                  key={appt._id}
                   className="flex justify-between dark:bg-gray-800 p-2 hover:dark:bg-gray-700"
                 >
                   <p className="flex-1/6">{appt.patient || "-"}</p>
@@ -173,6 +174,10 @@ const AllAppointments = () => {
               ))}
             </div>
           ))
+        ) : (
+          <div className="w-full h-full flex justify-center items-center">
+            <p>No Appointments!</p>
+          </div>
         )}
       </div>
     </div>

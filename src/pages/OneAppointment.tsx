@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router";
-import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 
 import {
@@ -16,21 +16,17 @@ import {
 } from "../constants/appointmentsConstants";
 
 const appointment: AppointmentData = {
-  id: "1",
-  patientName: "John Doe",
-  doctorName: "Dr. Evelyn Reed",
-  startTime: "09:00",
-  endTime: "09:45",
-  status: "Finished",
-  chiefComplaint: ["Severe toothache in upper right molar."],
-  diagnosis: ["Deep cavity (caries) in tooth #3."],
-  workToBeDone: ["Composite filling."],
-  workDone: [
-    "Administered local anesthesia.",
-    "Excavated decay from tooth #3.",
-    "Placed and cured composite filling.",
-  ],
-  prescribedMeds: ["Ibuprofen 600mg as needed for pain."],
+  _id: "",
+  patientName: "",
+  doctorName: "",
+  startTime: "",
+  endTime: "",
+  status: "",
+  chiefComplaint: [],
+  diagnosis: [],
+  workToBeDone: [],
+  workDone: [],
+  prescribedMeds: [],
   notes: [],
 };
 
@@ -54,23 +50,62 @@ const OneAppointment = () => {
     time: null,
     submission: null,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const params = useParams();
+  const isInitialEdit = useRef(false);
 
-  const handleDeleteAppt = (id: string) => {
-    fetch(`http://localhost:9000/api/appointment/${id}`, {
-      method: "DELETE",
+  useEffect(() => {
+    if (isEditing) {
+      isInitialEdit.current = true;
+    } else {
+      isInitialEdit.current = false;
+    }
+  }, [isEditing]);
+
+  const fetchAppointment = () => {
+    fetch(`http://localhost:9000/api/appointment/${params.id}`, {
+      method: "GET",
     })
       .then((res) => res.json())
       .then((data) => {
+        setAppointmentData(data.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        setError(error);
+      });
+  };
+
+  useEffect(() => {
+    fetchAppointment();
+  }, []);
+
+  const handleDeleteAppt = () => {
+    console.log(params.id);
+    fetch(`http://localhost:9000/api/appointment/${params.id}`, {
+      method: "DELETE",
+    })
+      .then(async (res) => {
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Something went wrong");
+        }
+
         setSuccessMsgs((prev) => ({
           ...prev,
           submission: "Appointment deleted! Redirecting...",
         }));
-        setTimeout(() => {
-          navigate("/appointments");
-        }, 1000);
+
+        console.log(data);
+
+        setTimeout(() => navigate("/appointments"), 1000);
       })
       .catch((error) => {
+        console.error("Delete Error:", error.message);
         setErrorMsgs((prev) => ({
           ...prev,
           submission: "Delete failed!",
@@ -143,31 +178,16 @@ const OneAppointment = () => {
     }));
   };
 
-  const displayDuration = () => {
-    if (!appointmentData.startTime || !appointmentData.endTime) return "-";
-
-    const [startHour, startMinute] = appointmentData.startTime
-      .split(":")
-      .map(Number);
-    let [endHour, endMinute] = appointmentData.endTime.split(":").map(Number);
-
+  useEffect(() => {
     if (
-      endHour < startHour ||
-      (endHour === startHour && endMinute < startMinute)
+      !isEditing ||
+      isInitialEdit.current ||
+      !appointmentData.date ||
+      !appointmentData.startTime
     ) {
-      endHour += 24;
+      return;
     }
 
-    const totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    return `${hours > 0 ? `${hours}h ` : ""}${
-      minutes > 0 ? `${minutes}m ` : ""
-    }`;
-  };
-
-  useEffect(() => {
     if (appointmentData.date && appointmentData.startTime) {
       if (appointmentData.endTime) {
         const [startHour, startMinute] = appointmentData.startTime
@@ -256,6 +276,8 @@ const OneAppointment = () => {
       return;
     }
 
+    isInitialEdit.current = false;
+
     const payload =
       fieldName === "startTime"
         ? {
@@ -277,8 +299,8 @@ const OneAppointment = () => {
       ...prev,
       submission: "Saving Appointment...",
     }));
-    fetch("http://localhost:9000/api/appointment/", {
-      method: "POST",
+    fetch(`http://localhost:9000/api/appointment/${params.id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(appointmentData),
     })
@@ -297,7 +319,8 @@ const OneAppointment = () => {
             ...prev,
             submission: "Appointment Saved!",
           }));
-          setAppointmentData(newAppointment);
+          fetchAppointment();
+          setIsEditing(false);
           setTimeout(() => {
             setSuccessMsgs((prev) => ({
               ...prev,
@@ -307,6 +330,7 @@ const OneAppointment = () => {
         }
       })
       .catch((error) => {
+        console.error(error);
         setLoadingMsgs((prev) => ({
           ...prev,
           submission: null,
@@ -485,12 +509,6 @@ const OneAppointment = () => {
           )}
         </div>
       );
-    } else if (field.name === "duration") {
-      return (
-        <div className="flex items-center">
-          <p className="py-1">{displayDuration()}</p>
-        </div>
-      );
     }
   };
 
@@ -510,7 +528,7 @@ const OneAppointment = () => {
       </Link>
       <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-semibold">Appointment Details</h1>
-        <div className="flex gap-1">
+        <div className="flex gap-2 items-center">
           <span>
             {loadingMsgs.submission && (
               <span className="text-sm dark:text-white">
@@ -528,24 +546,27 @@ const OneAppointment = () => {
               </span>
             )}
           </span>
-          <button
-            className={`${buttonStyles} p-2`}
-            type="button"
-            onClick={() => {
-              handleDeleteAppt(appointment.id);
-            }}
-          >
-            Delete Appointment
-          </button>
           {isEditing ? (
-            <button
-              className={`${buttonStyles} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              disabled={isSaveDisabled}
-              type="submit"
-              onClick={handleSubmit}
-            >
-              Update Appointment
-            </button>
+            <>
+              <button
+                className={`${buttonStyles} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={isSaveDisabled}
+                type="submit"
+                onClick={() => {
+                  setIsEditing((prev) => !prev);
+                }}
+              >
+                Stop Editing
+              </button>
+              <button
+                className={`${buttonStyles} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={isSaveDisabled}
+                type="submit"
+                onClick={handleSubmit}
+              >
+                Update Appointment
+              </button>
+            </>
           ) : (
             <button
               className={`${buttonStyles} p-2`}
@@ -557,6 +578,15 @@ const OneAppointment = () => {
               Edit Appointment
             </button>
           )}
+          <button
+            className={`${buttonStyles} p-2`}
+            type="button"
+            onClick={() => {
+              handleDeleteAppt();
+            }}
+          >
+            Delete Appointment
+          </button>
         </div>
       </div>
       {isEditing ? (
