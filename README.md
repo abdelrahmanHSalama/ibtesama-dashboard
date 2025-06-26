@@ -22,7 +22,7 @@ It enables clinic staff and doctors to manage appointments, patients, and their 
 - Update existing appointments.
 - Delete existing appointments.
 
-[![Appointments Module Video](https://img.youtube.com/vi/WiE8-D9MDk0/0.jpg)](https://youtu.be/WiE8-D9MDk0)
+[Feature Demo on YouTube](https://youtu.be/WiE8-D9MDk0)
 
 ### 🧑🏻 Patient Files:
 
