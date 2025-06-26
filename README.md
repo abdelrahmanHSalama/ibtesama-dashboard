@@ -9,6 +9,8 @@ It enables clinic staff and doctors to manage appointments, patients, and their 
 
 ### 🗓️ Appointments Management:
 
+[Feature Demo on YouTube](https://youtu.be/WiE8-D9MDk0)
+
 ⬤ Completed - Needs Polishing.
 
 - View all appointments with filtering by date, patient, doctor, and status (Filtering Still Not Implemented).
@@ -21,8 +23,6 @@ It enables clinic staff and doctors to manage appointments, patients, and their 
   - Notes.
 - Update existing appointments.
 - Delete existing appointments.
-
-[Feature Demo on YouTube](https://youtu.be/WiE8-D9MDk0)
 
 ### 🧑🏻 Patient Files:
 
