@@ -1,7 +1,7 @@
 # 🦷 Ibtesama Dashboard
 
-**Ibtesama-Dashboard** is part of a full-stack digital ecosystem for dental clinics.  
-It enables clinic staff and doctors to manage appointments, patients, charts, labs, inventory, and finances.
+**Ibtesama-Dashboard** is a platform for managing dental clinics.  
+It enables clinic staff and doctors to manage appointments, patients, and their charts.
 
 ⚙ **Check out the backend repo by [@ZiadSharara](https://github.com/ziadsharara/ibtesama-backend)**.
 
@@ -9,9 +9,9 @@ It enables clinic staff and doctors to manage appointments, patients, charts, la
 
 ### 🗓️ Appointments Management:
 
-⬤ In Progress.
+⬤ Completed - Needs Polishing.
 
-- View all appointments with filtering by date, patient, doctor, and status.
+- View all appointments with filtering by date, patient, doctor, and status (Filtering Still Not Implemented).
 - Create new appointments with the following info:
   - Patient info.
   - Doctor info.
@@ -20,6 +20,9 @@ It enables clinic staff and doctors to manage appointments, patients, charts, la
   - Chief complaint, diagnosis, work to be done, work done and prescribed medications.
   - Notes.
 - Update existing appointments.
+- Delete existing appointments.
+
+[![Appointments Module Video](https://img.youtube.com/vi/WiE8-D9MDk0/0.jpg)](https://youtu.be/WiE8-D9MDk0)
 
 ### 🧑🏻 Patient Files:
 
